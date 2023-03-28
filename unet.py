@@ -59,9 +59,9 @@ class Unet(nn.Module):
         super().__init__()
 
         self.depth = depth
-        self.enc_blocks = [] # of length depth+1
-        self.dec_blocks = [] # of length depth+1
-        self.skip_blocks = [] # of length depth
+        self.enc_blocks = nn.ModuleList([]) # of length depth+1
+        self.dec_blocks = nn.ModuleList([]) # of length depth+1
+        self.skip_blocks = nn.ModuleList([]) # of length depth
 
         self.enc_blocks.append(simple_block(in_channels, down_channels))
         self.dec_blocks.append(simple_block(skip_channels+up_channels, up_channels))
