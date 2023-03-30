@@ -42,3 +42,21 @@ def poisson_noise(im, peak):
 
 def display(im):
     return im.squeeze().detach().numpy()
+
+def cdf(im, bits=16):
+    hist, _ = np.histogram(im.flatten(), bins=2**bits, range=(0,1))
+    cdf = np.cumsum(hist) / np.prod(im.shape)
+    return cdf
+
+def match_hist(im, ref, bits=16):
+    # compute cdf
+    cdf_ref = cdf(ref, bits)
+    cdf_im = cdf(im, bits)
+    # keep only leftmost quantiles for interpolation
+    is_left = np.hstack([True, cdf_ref[:-1] - cdf_ref[1:] < 0])
+    left_cdf_ref = cdf_ref[is_left]
+    left_values = (np.nonzero(is_left)[0] / (2**bits-1)).astype(im.dtype)
+    # 2**bits array representing the matching function
+    matches = np.interp(cdf_im, left_cdf_ref, left_values)
+    im_matched = matches[(im*(2**bits-1)).astype(f'uint{str(bits)}')]
+    return im_matched
