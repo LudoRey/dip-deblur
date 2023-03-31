@@ -2,6 +2,7 @@ import numpy as np
 import skimage as sk
 import torch.nn.functional as F
 import torch
+from torch import nn
 from torchvision import transforms
 
 def read_img(path, as_tensor=False):
@@ -39,6 +40,14 @@ def poisson_noise(im, peak):
     '''im is a tensor, peak is a scalar'''
     noisy_im = torch.poisson(im * peak) / peak
     return noisy_im
+
+class CsiszarDiv(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, output, target):
+        # Output is variable, target is GT
+        return np.dot(target, np.log(target/output)) + np.sum(-target + output)
 
 def display(im):
     return im.squeeze().detach().numpy()
