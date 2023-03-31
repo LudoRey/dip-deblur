@@ -47,7 +47,7 @@ class CsiszarDiv(nn.Module):
 
     def forward(self, output, target):
         # Output is variable, target is GT
-        return torch.sum(target*torch.log(target/output) - target + output)
+        return torch.sum(target*torch.log(target/torch.max(output,torch.tensor([0.001]))) - target + output)
 
 def to_numpy(im):
     return im.squeeze().detach().cpu().numpy()
