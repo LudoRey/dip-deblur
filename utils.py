@@ -46,7 +46,9 @@ class CsiszarDiv(nn.Module):
         super().__init__()
 
     def forward(self, output, target):
-        # Output is variable, target is GT
+        # Enforce positivity
+        eps = 0.001
+        output = torch.max(output, torch.tensor([eps], device=output.device))
         return torch.sum(target*torch.log(target/output) - target + output)
 
 def to_numpy(im):
