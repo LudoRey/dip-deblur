@@ -26,7 +26,7 @@ def gaussian_kernel(sigma=1, truncate=3.0, as_tensor=False):
     ker = ker / np.sum(ker)
     if as_tensor:
         # retourne un tenseur 1x1xHxW
-        ker = torch.tensor(ker, dtype=torch.float32).reshape(1,1,ker.shape[0],ker.shape[1])
+        ker = transforms.ToTensor()(ker.astype('float32')).unsqueeze_(0)
     return ker
 
 def blur(im, ker, padding_mode='reflect'):
@@ -47,10 +47,10 @@ class CsiszarDiv(nn.Module):
 
     def forward(self, output, target):
         # Output is variable, target is GT
-        return np.dot(target, np.log(target/output)) + np.sum(-target + output)
+        return torch.sum(target*torch.log(target/output) - target + output)
 
-def display(im):
-    return im.squeeze().detach().numpy()
+def to_numpy(im):
+    return im.squeeze().detach().cpu().numpy()
 
 def cdf(im, bits=16):
     hist, _ = np.histogram(im.flatten(), bins=2**bits, range=(0,1))
