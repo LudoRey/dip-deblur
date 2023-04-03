@@ -124,7 +124,8 @@ class Unet(nn.Module):
                 self.dec_blocks.append(UpBlock(skip_channels+feature_channels, feature_channels, kernel_size=feature_ksize))
 
             # Skip blocks
-            self.skip_blocks.append(SkipBlock(feature_channels, skip_channels, kernel_size=skip_ksize))
+            if skip_channels != 0:
+                self.skip_blocks.append(SkipBlock(feature_channels, skip_channels, kernel_size=skip_ksize))
 
         self.out_block = OutBlock(feature_channels, out_channels, kernel_size=1)
         
@@ -134,11 +135,15 @@ class Unet(nn.Module):
         skips = []
         for l in range(self.depth):
             x = self.enc_blocks[l](x)
-            skips.append(self.skip_blocks[l](x))
+            if len(self.skip_blocks) != 0:
+                skips.append(self.skip_blocks[l](x))
         # Bottom block
         x = self.enc_blocks[self.depth](x)
         x = self.dec_blocks[self.depth](x)
         # Decoder
         for l in reversed(range(self.depth)):
-            x = self.dec_blocks[l](cat([x, skips[l]], dim=1))
+            if len(self.skip_blocks) != 0:
+                x = self.dec_blocks[l](cat([x, skips[l]], dim=1))
+            else:
+                x = self.dec_blocks[l](x)
         return self.out_block(x)
