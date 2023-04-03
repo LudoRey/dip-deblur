@@ -97,9 +97,10 @@ class OutBlock(nn.Module):
 class Unet(nn.Module):
     def __init__(self,
                 in_channels = 32,
-                down_channels = 128,
-                up_channels = 128,
+                feature_channels = 128,
+                feature_ksize = 3,
                 skip_channels = 4,
+                skip_ksize = 1,
                 out_channels = 3,
                 depth = 4):
         super().__init__()
@@ -109,23 +110,23 @@ class Unet(nn.Module):
         self.dec_blocks = nn.ModuleList([]) # of length depth+1
         self.skip_blocks = nn.ModuleList([]) # of length depth
 
-        self.enc_blocks.append(SimpleBlock(in_channels, down_channels))
-        self.dec_blocks.append(SimpleBlock(skip_channels+up_channels, up_channels))
+        self.enc_blocks.append(SimpleBlock(in_channels, feature_channels, kernel_size=feature_ksize))
+        self.dec_blocks.append(SimpleBlock(skip_channels+feature_channels, feature_channels, kernel_size=feature_ksize))
 
         for l in range(self.depth):
             # Down blocks
-            self.enc_blocks.append(DownBlock(down_channels, down_channels))
+            self.enc_blocks.append(DownBlock(feature_channels, feature_channels, kernel_size=feature_ksize))
 
             # Up blocks
             if l == self.depth-1:
-                self.dec_blocks.append(UpBlock(down_channels, up_channels))
+                self.dec_blocks.append(UpBlock(feature_channels, feature_channels, kernel_size=feature_ksize))
             else:
-                self.dec_blocks.append(UpBlock(skip_channels+up_channels, up_channels))
+                self.dec_blocks.append(UpBlock(skip_channels+feature_channels, feature_channels, kernel_size=feature_ksize))
 
             # Skip blocks
-            self.skip_blocks.append(SkipBlock(down_channels, skip_channels))
+            self.skip_blocks.append(SkipBlock(feature_channels, skip_channels, kernel_size=skip_ksize))
 
-        self.out_block = OutBlock(up_channels, out_channels, kernel_size=1)
+        self.out_block = OutBlock(feature_channels, out_channels, kernel_size=1)
         
         
     def forward(self, x):
