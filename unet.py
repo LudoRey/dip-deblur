@@ -51,7 +51,7 @@ class UpBlock(nn.Module):
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.relu2 = nn.ReLU()
         self.up = nn.Upsample(scale_factor=2, mode='bilinear')
@@ -79,6 +79,19 @@ class SkipBlock(nn.Module):
         x = self.conv(x)
         x = self.bn(x)
         x = self.relu(x)
+        return x
+    
+class OutBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=1):
+        super().__init__()
+        padding = kernel_size//2
+        
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding)
+        self.sig = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.sig(x)
         return x
 
 class Unet(nn.Module):
@@ -112,7 +125,7 @@ class Unet(nn.Module):
             # Skip blocks
             self.skip_blocks.append(SkipBlock(down_channels, skip_channels))
 
-        self.out_block = nn.Conv2d(up_channels, out_channels, kernel_size=1)
+        self.out_block = OutBlock(up_channels, out_channels, kernel_size=1)
         
         
     def forward(self, x):
