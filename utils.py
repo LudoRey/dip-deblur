@@ -41,6 +41,10 @@ def poisson_noise(im, peak):
     noisy_im = torch.poisson(im * peak) / peak
     return noisy_im
 
+def gaussian_noise(im, sigma):
+    noisy_im = torch.normal(im, std=torch.ones_like(im)*sigma)
+    return noisy_im
+
 class CsiszarDiv(nn.Module):
     def __init__(self):
         super().__init__()
